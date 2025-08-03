@@ -17,7 +17,10 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin("*")
+@CrossOrigin(
+        origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:8080"},
+        allowCredentials = "true"
+)
 public class AuthController {
 
     private final AuthService authService;

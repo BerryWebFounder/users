@@ -37,7 +37,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns(
                         "http://localhost:3000",    // Nuxt 개발 서버
                         "http://localhost:8080",    // API Gateway
-                        "https://*.yourdomain.com"  // 운영 도메인
+                        "https://*.berryweb.co.kr"  // 운영 도메인
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")

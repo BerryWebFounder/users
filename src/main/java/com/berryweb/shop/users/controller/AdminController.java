@@ -28,7 +28,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")
-@CrossOrigin("*")
+@CrossOrigin(
+        origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:8080"},
+        allowCredentials = "true"
+)
 public class AdminController {
 
     private final UserService userService;

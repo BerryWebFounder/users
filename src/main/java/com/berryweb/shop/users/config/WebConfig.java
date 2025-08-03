@@ -74,6 +74,10 @@ public class WebConfig implements WebMvcConfigurer {
         // 성능 모니터링 인터셉터
         registry.addInterceptor(new PerformanceInterceptor())
                 .addPathPatterns("/api/**");
+
+        // API 버전 인터셉터
+        registry.addInterceptor(apiVersionInterceptor())
+                .addPathPatterns("/api/**");
     }
 
     // ============ 메시지 컨버터 설정 ============
@@ -100,6 +104,9 @@ public class WebConfig implements WebMvcConfigurer {
 
         // 알 수 없는 프로퍼티 무시
         mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        // 빈 객체 직렬화 실패 방지
+        mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         return mapper;
     }
@@ -160,9 +167,15 @@ public class WebConfig implements WebMvcConfigurer {
                             duration);
                 }
 
-                // 느린 요청 경고
-                if (duration > 5000) { // 5초 이상
+                // 느린 요청 경고 (5초 이상)
+                if (duration > 5000) {
                     log.warn("Slow request detected: {} {} - Duration: {}ms",
+                            request.getMethod(), request.getRequestURI(), duration);
+                }
+
+                // 매우 느린 요청 에러 (30초 이상)
+                if (duration > 30000) {
+                    log.error("Very slow request detected: {} {} - Duration: {}ms",
                             request.getMethod(), request.getRequestURI(), duration);
                 }
             }
@@ -211,11 +224,15 @@ public class WebConfig implements WebMvcConfigurer {
                 // 성능 헤더 추가
                 response.setHeader("X-Response-Time", String.format("%.2fms", durationMs));
 
-                // 매우 느린 요청 로깅
-                if (durationMs > 10000) { // 10초 이상
+                // 매우 느린 요청 로깅 (10초 이상)
+                if (durationMs > 10000) {
                     log.error("Very slow request: {} {} - Duration: {:.2f}ms",
                             request.getMethod(), request.getRequestURI(), durationMs);
                 }
+
+                // 성능 메트릭 수집 (추후 Micrometer 연동)
+                // meterRegistry.timer("http.request.duration", "method", request.getMethod(), "status", String.valueOf(response.getStatus()))
+                //     .record(Duration.ofNanos(duration));
             }
         }
     }
@@ -232,6 +249,31 @@ public class WebConfig implements WebMvcConfigurer {
                 response.setHeader("X-API-Version", "1.0");
                 response.setHeader("X-Service-Name", "users-service");
                 response.setHeader("X-Server-Time", LocalDateTime.now().toString());
+
+                // CORS 헤더 추가 (필요시)
+                if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * 보안 헤더 설정 인터셉터
+     */
+    @Bean
+    public HandlerInterceptor securityHeaderInterceptor() {
+        return new HandlerInterceptor() {
+            @Override
+            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+                // 보안 헤더 설정
+                response.setHeader("X-Content-Type-Options", "nosniff");
+                response.setHeader("X-Frame-Options", "DENY");
+                response.setHeader("X-XSS-Protection", "1; mode=block");
+                response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
 
                 return true;
             }

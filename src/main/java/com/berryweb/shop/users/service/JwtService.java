@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,7 +92,7 @@ public class JwtService {
                 .subject(userDetails.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getSignInKey())
+                .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -140,9 +140,9 @@ public class JwtService {
     private Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
-                    .setSigningKey(getSignInKey())
+                    .verifyWith(getSignInKey())
                     .build()
-                    .parseClaimsJws(token)
+                    .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
             log.error("JWT token is expired: {}", e.getMessage());
@@ -153,7 +153,7 @@ public class JwtService {
         } catch (MalformedJwtException e) {
             log.error("JWT token is malformed: {}", e.getMessage());
             throw new RuntimeException("JWT token is malformed", e);
-        } catch (SecurityException e) {
+        } catch (JwtException e) {
             log.error("JWT signature validation failed: {}", e.getMessage());
             throw new RuntimeException("JWT signature validation failed", e);
         } catch (IllegalArgumentException e) {
@@ -163,7 +163,7 @@ public class JwtService {
     }
 
     // 서명 키 생성
-    private Key getSignInKey() {
+    private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -222,6 +222,26 @@ public class JwtService {
         config.put("refreshTokenExpiration", refreshExpiration);
         config.put("tokenType", TOKEN_TYPE);
         return config;
+    }
+
+    // 액세스 토큰 만료 시간 반환 (밀리초)
+    public Long getAccessTokenExpiration() {
+        return jwtExpiration;
+    }
+
+    // 리프레시 토큰 만료 시간 반환 (밀리초)
+    public Long getRefreshTokenExpiration() {
+        return refreshExpiration;
+    }
+
+    // 액세스 토큰 만료 시간 반환 (초)
+    public Long getAccessTokenExpirationInSeconds() {
+        return jwtExpiration / 1000;
+    }
+
+    // 리프레시 토큰 만료 시간 반환 (초)
+    public Long getRefreshTokenExpirationInSeconds() {
+        return refreshExpiration / 1000;
     }
 
 }

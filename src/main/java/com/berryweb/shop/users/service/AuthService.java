@@ -76,11 +76,11 @@ public class AuthService {
 
             log.info("User logged in successfully: {} (ID: {})", user.getUsername(), user.getId());
 
-            // 응답 생성
+            // 응답 생성 (expiresIn은 초 단위로 반환)
             return new LoginRes(
                     accessToken,
                     refreshToken,
-                    jwtService.getJwtConfig().get("accessTokenExpiration"),
+                    jwtService.getAccessTokenExpirationInSeconds(),
                     userService.toUserRes(user)
             );
 
@@ -129,7 +129,7 @@ public class AuthService {
             return new LoginRes(
                     newAccessToken,
                     newRefreshToken,
-                    jwtService.getJwtConfig().get("accessTokenExpiration"),
+                    jwtService.getAccessTokenExpirationInSeconds(),
                     userService.toUserRes(user)
             );
 
@@ -186,6 +186,7 @@ public class AuthService {
 
             // 새 인증 토큰 생성
             user.setEmailVerificationToken(java.util.UUID.randomUUID().toString());
+            userService.updateUser(user.getId(), new UserUpdateReq());
 
             // 이메일 발송
             sendEmailVerification(user);
@@ -331,6 +332,28 @@ public class AuthService {
         }
 
         return availability;
+    }
+
+    // ============ 토큰 정보 조회 ============
+
+    public Map<String, Object> getTokenInfo(String token) {
+        try {
+            Map<String, Object> tokenInfo = new HashMap<>();
+            tokenInfo.put("username", jwtService.extractUsername(token));
+            tokenInfo.put("userId", jwtService.extractUserId(token));
+            tokenInfo.put("role", jwtService.extractUserRole(token));
+            tokenInfo.put("expiration", jwtService.extractExpiration(token));
+            tokenInfo.put("expiresIn", jwtService.getTokenExpirationTimeInSeconds(token));
+            tokenInfo.put("isExpired", jwtService.isTokenExpired(token));
+            tokenInfo.put("isAccessToken", jwtService.isAccessToken(token));
+            tokenInfo.put("isRefreshToken", jwtService.isRefreshToken(token));
+            tokenInfo.put("canRefresh", jwtService.canRefreshToken(token));
+
+            return tokenInfo;
+        } catch (Exception e) {
+            log.error("Failed to get token info: {}", e.getMessage());
+            throw new RuntimeException("토큰 정보 조회에 실패했습니다.", e);
+        }
     }
 
     // ============ 계정 잠금 관련 (추후 구현) ============

@@ -1,7 +1,6 @@
 package com.berryweb.shop.users.config;
 
 import com.berryweb.shop.users.service.JwtService;
-import com.berryweb.shop.users.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,19 +11,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserService userService;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -55,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 // 사용자 정보 로드
-                UserDetails userDetails = this.userService.loadUserByUsername(userEmail);
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
                 // 토큰 유효성 검사
                 if (jwtService.isTokenValid(jwt, userDetails)) {
@@ -87,6 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
                     log.debug("JWT authentication successful for user: {}", userEmail);
+                    logRequestInfo(request, userEmail);
 
                 } else {
                     log.warn("Invalid JWT token for user: {}", userEmail);

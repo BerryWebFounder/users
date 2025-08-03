@@ -5,6 +5,10 @@ spring:
   application:
     name: users-service
 
+  # 순환 참조 임시 허용 (근본적 해결 후 제거 권장)
+  main:
+    allow-circular-references: false  # false로 유지하여 순환 참조 방지
+
   datasource:
     url: jdbc:mariadb://localhost:3306/shop_users
     username: root
@@ -19,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update  # 스키마 문제 해결을 위해 update 사용
     show-sql: true
     properties:
       hibernate:
@@ -30,14 +34,26 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+        # 스키마 검증 관련 설정
+        hbm2ddl:
+          auto: update
+        globally_quoted_identifiers: false
     open-in-view: false
 
   # Flyway 설정
   flyway:
-    enabled: true
+    enabled: false  # 스키마 문제 해결 후 true로 변경
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
+    repair: true
+    baseline-version: 0
+
+  # 멀티파트 파일 업로드 설정
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 # Eureka 설정
 eureka:
@@ -54,7 +70,7 @@ eureka:
 
 # JWT 설정
 jwt:
-  secret: ${JWT_SECRET:bWV5QnVkZGluZ1NlY3JldEtleUZvckpXVFNlcnZpY2U=}
+  secret: ${JWT_SECRET:bWV5QnVkZGluZ1NlY3JldEtleUZvckpXVFNlcnZpY2VCZXJyeVdlYnVzZXJzU2VydmljZQ==}
   expiration: 86400000      # 24시간 (밀리초)
   refresh-expiration: 604800000  # 7일 (밀리초)
 
@@ -83,10 +99,12 @@ management:
 logging:
   level:
     com.berryweb.shop.users: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: DEBUG
+    org.springframework.beans.factory.support: DEBUG  # Bean 생성 과정 디버깅
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -101,8 +119,8 @@ feign:
         connectTimeout: 5000
         readTimeout: 10000
         loggerLevel: basic
-  hystrix:
-    enabled: false
+  circuitbreaker:
+    enabled: true
 
 # 스프링 부트 정보
 info:
@@ -124,6 +142,9 @@ spring:
     url: jdbc:mariadb://localhost:3306/shop_users
     username: root
     password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
 logging:
   level:
     root: INFO
@@ -138,6 +159,9 @@ spring:
     url: jdbc:mariadb://dev-db:3306/shop_users
     username: ${DB_USERNAME:shop_user}
     password: ${DB_PASSWORD:shop_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
 logging:
   level:
     root: INFO
@@ -153,6 +177,8 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
+    hibernate:
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:

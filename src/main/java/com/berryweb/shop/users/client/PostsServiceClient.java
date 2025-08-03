@@ -143,66 +143,77 @@ public interface PostsServiceClient {
             return new PostsServiceClient() {
                 @Override
                 public List<PostDto> getPostsByAuthor(Long authorId) {
-                    log.warn("Fallback: getPostsByAuthor for user {}", authorId);
+                    log.warn("Fallback: getPostsByAuthor for user {} - {}", authorId, cause.getMessage());
                     return Collections.emptyList();
                 }
 
                 @Override
                 public Long getPostCountByAuthor(Long authorId) {
-                    log.warn("Fallback: getPostCountByAuthor for user {}", authorId);
+                    log.warn("Fallback: getPostCountByAuthor for user {} - {}", authorId, cause.getMessage());
                     return 0L;
                 }
 
                 @Override
                 public void updateAuthorInfo(Long authorId, AuthorUpdateReq request) {
-                    log.warn("Fallback: updateAuthorInfo for user {} - request queued for retry", authorId);
-                    // TODO: 큐에 추가하여 나중에 재시도
+                    log.warn("Fallback: updateAuthorInfo for user {} - request queued for retry. Error: {}",
+                            authorId, cause.getMessage());
+                    // TODO: 메시지 큐에 추가하여 나중에 재시도
+                    // messageQueueService.queueAuthorUpdate(authorId, request);
                 }
 
                 @Override
                 public void deactivateAuthorPosts(Long authorId) {
-                    log.warn("Fallback: deactivateAuthorPosts for user {} - request queued for retry", authorId);
-                    // TODO: 큐에 추가하여 나중에 재시도
+                    log.warn("Fallback: deactivateAuthorPosts for user {} - request queued for retry. Error: {}",
+                            authorId, cause.getMessage());
+                    // TODO: 메시지 큐에 추가하여 나중에 재시도
+                    // messageQueueService.queueAuthorDeactivation(authorId);
                 }
 
                 @Override
                 public List<CommentDto> getCommentsByAuthor(Long authorId) {
-                    log.warn("Fallback: getCommentsByAuthor for user {}", authorId);
+                    log.warn("Fallback: getCommentsByAuthor for user {} - {}", authorId, cause.getMessage());
                     return Collections.emptyList();
                 }
 
                 @Override
                 public Long getCommentCountByAuthor(Long authorId) {
-                    log.warn("Fallback: getCommentCountByAuthor for user {}", authorId);
+                    log.warn("Fallback: getCommentCountByAuthor for user {} - {}", authorId, cause.getMessage());
                     return 0L;
                 }
 
                 @Override
                 public void updateCommentAuthorInfo(Long authorId, AuthorUpdateReq request) {
-                    log.warn("Fallback: updateCommentAuthorInfo for user {} - request queued for retry", authorId);
-                    // TODO: 큐에 추가하여 나중에 재시도
+                    log.warn("Fallback: updateCommentAuthorInfo for user {} - request queued for retry. Error: {}",
+                            authorId, cause.getMessage());
+                    // TODO: 메시지 큐에 추가하여 나중에 재시도
+                    // messageQueueService.queueCommentAuthorUpdate(authorId, request);
                 }
 
                 @Override
                 public void deactivateAuthorComments(Long authorId) {
-                    log.warn("Fallback: deactivateAuthorComments for user {} - request queued for retry", authorId);
-                    // TODO: 큐에 추가하여 나중에 재시도
+                    log.warn("Fallback: deactivateAuthorComments for user {} - request queued for retry. Error: {}",
+                            authorId, cause.getMessage());
+                    // TODO: 메시지 큐에 추가하여 나중에 재시도
+                    // messageQueueService.queueCommentDeactivation(authorId);
                 }
 
                 @Override
                 public UserActivityStatsDto getUserActivityStats(Long userId) {
-                    log.warn("Fallback: getUserActivityStats for user {}", userId);
+                    log.warn("Fallback: getUserActivityStats for user {} - {}", userId, cause.getMessage());
                     UserActivityStatsDto stats = new UserActivityStatsDto();
                     stats.setUserId(userId);
                     stats.setPostCount(0L);
                     stats.setCommentCount(0L);
                     stats.setTotalViews(0L);
+                    stats.setLastActivityAt(null);
+                    stats.setFirstActivityAt(null);
                     return stats;
                 }
 
                 @Override
                 public Map<Long, UserActivityStatsDto> getUsersActivityStats(List<Long> userIds) {
-                    log.warn("Fallback: getUsersActivityStats for {} users", userIds.size());
+                    log.warn("Fallback: getUsersActivityStats for {} users - {}",
+                            userIds != null ? userIds.size() : 0, cause.getMessage());
                     return Collections.emptyMap();
                 }
             };

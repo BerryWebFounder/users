@@ -355,4 +355,36 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/auth/login")
+    public ResponseEntity<Map<String, Object>> loginAlias(@Valid @RequestBody LoginReq request) {
+        return login(request); // 기존 login 메서드 재사용
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<Map<String, Object>> logoutAlias(HttpServletRequest request) {
+        return logout(request); // 기존 logout 메서드 재사용
+    }
+
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<Map<String, Object>> refreshTokenAlias(@RequestBody Map<String, String> request) {
+        return refreshToken(request); // 기존 refreshToken 메서드 재사용
+    }
+
+    @PostMapping("/auth/validate-token")
+    public ResponseEntity<Map<String, Object>> validateTokenAlias(HttpServletRequest request) {
+        return validateToken(request); // 기존 validateToken 메서드 재사용
+    }
+
+    @GetMapping("/auth/me")
+    public ResponseEntity<Map<String, Object>> getCurrentUserAlias(HttpServletRequest request) {
+        return getCurrentUser(request); // 기존 getCurrentUser 메서드 재사용
+    }
+
+    @GetMapping("/auth/check-availability")
+    public ResponseEntity<Map<String, Object>> checkAvailabilityAlias(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String email) {
+        return checkAvailability(username, email); // 기존 메서드 재사용
+    }
+
 }

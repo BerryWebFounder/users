@@ -53,17 +53,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()  // 백오피스용 경로 추가
                         .requestMatchers("/api/users/check-availability").permitAll()
                         .requestMatchers("/api/users/verify-email").permitAll()
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
 
-                        // Admin only endpoints
+                        // ADMIN only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/role").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/status").hasRole("ADMIN")
 
-                        // Moderator+ endpoints
+                        // SYSOP endpoints
                         .requestMatchers("/api/users/search").hasAnyRole("SYSOP", "ADMIN")
                         .requestMatchers("/api/users/list").hasAnyRole("SYSOP", "ADMIN")
 

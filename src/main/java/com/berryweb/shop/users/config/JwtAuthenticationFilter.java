@@ -131,6 +131,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // JWT 인증을 건너뛸 경로들
         return path.startsWith("/api/auth/") ||
+                path.startsWith("/auth/") ||  // 백오피스용 경로 추가
                 path.startsWith("/api/users/check-availability") ||
                 path.startsWith("/api/users/verify-email") ||
                 path.startsWith("/api/health") ||
